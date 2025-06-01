@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Key Generator</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: url('https://raw.githubusercontent.com/AlexScriptluarbx/image-/refs/heads/main/e9249e887de6035b0d401230d7708e8a.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #00eaff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #container {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 40px;
+      border-radius: 15px;
+      text-align: center;
+      width: 350px;
+      box-shadow: 0 0 20px #00eaff;
+      animation: fadeIn 1.5s ease forwards;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 26px;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    #getKeyBtn {
+      background: linear-gradient(45deg, #0066ff, #00eaff);
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      color: white;
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: bold;
+      box-shadow: 0 0 15px #00eaffaa;
+      transition: 0.3s;
+    }
+
+    #getKeyBtn:hover:not(:disabled) {
+      box-shadow: 0 0 25px #00eaff;
+    }
+
+    #getKeyBtn:disabled {
+      background: #004466;
+      cursor: not-allowed;
+    }
+
+    #status {
+      font-size: 18px;
+      margin: 15px 0;
+      min-height: 24px;
+    }
+
+    #key {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00ffdd;
+      text-shadow: 0 0 10px #00ffeebb;
+      user-select: text;
+    }
+
+    @keyframes glow {
+      0% { text-shadow: 0 0 8px #00eaff; }
+      100% { text-shadow: 0 0 25px #00ffcc; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .yt-button {
+      margin-top: 25px;
+      display: inline-flex;
+      align-items: center;
+      background-color: #ff0000;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      box-shadow: 0 0 10px #ff000088;
+      transition: background 0.3s;
+    }
+
+    .yt-button:hover {
+      background-color: #cc0000;
+    }
+
+    .yt-button img {
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Get Your Key</h1>
+    <button id="getKeyBtn">Get Key System</button>
+    <div id="status"></div>
+    <div id="key"></div>
+    <a class="yt-button" href="https://www.youtube.com/@Shadow7Sasuke" target="_blank">
+      <img src="https://raw.githubusercontent.com/AlexScriptluarbx/image-/refs/heads/main/81476968015b2ac40320e94246a8caf8.jpg" alt="YouTube"> YouTube Channel
+    </a>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "F9_key";
+    const EXPIRATION_KEY = "Key_expire";
+    const EXPIRE_TIME_MS = 12 * 60 * 60 * 1000; // 12 ore
+
+    function generateKey() {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let key = "F9-";
+      for (let i = 0; i < 12; i++) {
+        key += chars.charAt(Math.floor(Math.random() * chars.length));
+        if ((i + 1) % 4 === 0 && i !== 11) key += "-";
+      }
+      return key;
+    }
+
+    function isKeyValid() {
+      const expiration = localStorage.getItem(EXPIRATION_KEY);
+      return expiration && Date.now() < parseInt(expiration);
+    }
+
+    function showKey(key) {
+      document.getElementById("status").innerText = "Key valid for 12 hours:";
+      document.getElementById("key").innerText = key;
+    }
+
+    function clearKey() {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(EXPIRATION_KEY);
+      document.getElementById("status").innerText = "";
+      document.getElementById("key").innerText = "";
+      const btn = document.getElementById("getKeyBtn");
+      btn.style.display = "inline-block";
+      btn.disabled = false;
+    }
+
+    function startCountdown(seconds) {
+      const btn = document.getElementById("getKeyBtn");
+      const status = document.getElementById("status");
+      const keyDiv = document.getElementById("key");
+
+      let remaining = seconds;
+      const interval = setInterval(() => {
+        status.innerText = `Please wait ${remaining} second${remaining === 1 ? '' : 's'}...`;
+        remaining--;
+
+        if (remaining < 0) {
+          clearInterval(interval);
+          const newKey = generateKey();
+          localStorage.setItem(STORAGE_KEY, newKey);
+          localStorage.setItem(EXPIRATION_KEY, Date.now() + EXPIRE_TIME_MS);
+          showKey(newKey);
+          btn.style.display = "none";
+
+          // Set timeout to clear key after expiration time
+          setTimeout(() => {
+            clearKey();
+          }, EXPIRE_TIME_MS);
+        }
+      }, 1000);
+    }
+
+    window.onload = () => {
+      const btn = document.getElementById("getKeyBtn");
+      if (isKeyValid()) {
+        const savedKey = localStorage.getItem(STORAGE_KEY);
+        showKey(savedKey);
+        btn.style.display = "none";
+
+        // Calculate remaining time to expiration
+        const expiration = parseInt(localStorage.getItem(EXPIRATION_KEY));
+        const remainingTime = expiration - Date.now();
+
+        // Set timeout to clear key after remaining time
+        setTimeout(() => {
+          clearKey();
+        }, remainingTime);
+      } else {
+        clearKey(); // dacă cheia nu e validă, se asigură că e totul curat
+      }
+    };
+
+    document.getElementById("getKeyBtn").onclick = () => {
+      const btn = document.getElementById("getKeyBtn");
+      btn.disabled = true;
+      document.getElementById("key").innerText = "";
+      startCountdown(15);
+    };
+  </script>
+</body>
+</html>
